@@ -464,6 +464,36 @@
 
     .result-copy { margin-bottom: 25px; color: var(--muted); line-height: 1.6; }
 
+    .missed-review {
+      margin: 0 0 24px;
+      text-align: left;
+    }
+
+    .missed-review h3 {
+      margin: 0 0 12px;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-size: 18px;
+    }
+
+    .missed-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .missed-item {
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-solid);
+    }
+
+    .missed-question { margin: 0 0 5px; font-weight: 700; line-height: 1.45; }
+    .missed-answer { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .review-empty { margin: 0 0 24px; color: var(--teal); font-weight: 700; line-height: 1.5; }
+
     .sr-only {
       width: 1px;
       height: 1px;
@@ -597,6 +627,7 @@
     let questionIndex = 0;
     let score = 0;
     let answered = false;
+    let missedQuestions = [];
 
     function setTheme(theme) {
       root.dataset.theme = theme;
@@ -623,6 +654,7 @@
     function startQuiz() {
       questionIndex = 0;
       score = 0;
+      missedQuestions = [];
       renderQuestion();
     }
 
@@ -663,6 +695,7 @@
       const item = questions[questionIndex];
       const isCorrect = selected === item.correct;
       if (isCorrect) score++;
+      else missedQuestions.push({ question: item.question, correctAnswer: item.answers[item.correct] });
 
       app.querySelectorAll(".answer").forEach((button, index) => {
         button.disabled = true;
@@ -691,6 +724,21 @@
           : percentage >= .4
             ? "Good work out there. Every explorer learns something new!"
             : "Every great astronaut starts with curiosity. Ready for another flight?";
+      const review = missedQuestions.length
+        ? `
+            <section class="missed-review" aria-labelledby="missed-review-title">
+              <h3 id="missed-review-title">Questions to review</h3>
+              <ol class="missed-list">
+                ${missedQuestions.map(({ question, correctAnswer }) => `
+                  <li class="missed-item">
+                    <p class="missed-question">${question}</p>
+                    <p class="missed-answer"><strong>Correct answer:</strong> ${correctAnswer}</p>
+                  </li>
+                `).join("")}
+              </ol>
+            </section>
+        `
+        : `<p class="review-empty">You answered every question correctly — no questions to review!</p>`;
       app.innerHTML = `
         <div class="result">
           <div class="eyebrow"><span>✦ &nbsp; Mission complete</span><span class="score-pill">🌌 Space Explorer</span></div>
@@ -698,6 +746,7 @@
           <h2>${heading}</h2>
           <div class="result-score">${score}<span style="font-size:23px;color:var(--muted)"> / ${questions.length}</span></div>
           <p class="result-copy">${message}</p>
+          ${review}
           <button type="button" class="primary-btn" id="restart-btn">Fly again <span aria-hidden="true">↻</span></button>
         </div>
       `;
